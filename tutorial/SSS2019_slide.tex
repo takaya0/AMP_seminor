@@ -1,0 +1,406 @@
+\documentclass[dvipdfmx,11pt]{beamer}		% for my notebook computer and my Mac computer
+%\documentclass[11pt]{beamer}			% for overleaf
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+%\usepackage{amsthm}
+
+\usetheme{Berlin}	%全体のデザイン
+
+\useoutertheme[subsection=false]{smoothbars}	%デザインのカスタマイズ
+
+\setbeamertemplate{navigation symbols}{}	%右下のちっちゃいナビゲーション記号を非表示
+
+\AtBeginSubsection[]	%サブセクションごとに目次を表示
+{\begin{frame}{Contents}
+	\tableofcontents[currentsubsection]
+\end{frame}}
+
+\newtheorem{defi}{Definition}
+\newtheorem{thm}[defi]{Theorem}
+\newtheorem{prop}[defi]{Proposition}
+\newtheorem{conj}[defi]{Conjecture}
+\newtheorem{prob}[defi]{Problem}
+\newtheorem{set}[defi]{Setting}
+\newtheorem{claim}[defi]{Claim}
+
+\newcommand{\R}{\mathbb{R}}
+
+\title{Comments on a Numerical Scheme\\for Expectations with First Hitten Time\\to Smooth Boundary}
+\author{TAMURA Yuma}
+\institute{Ritsumeikan Univ.}
+\date{The 51st ISCIE International Symposium\\on Stochastic Systems Theory and Its Applications\\Aizu University, Nov. 1, 2019}
+
+\begin{document}
+%
+\begin{frame}\frametitle{}
+	\titlepage	
+\end{frame}
+%
+\section*{Contents}
+\begin{frame}\frametitle{Contents}
+	\tableofcontents
+\end{frame}
+%
+\section{Previous works}
+\subsection{Overview}
+%
+\begin{frame}\frametitle{Overview}
+	\begin{prob}[Roughly stated]
+		Let \( X \) be a real valued diffusion process, \(T>0\), and \( f \) be a bounded measurable function.\\
+		Find an efficient calculation scheme for
+		\[
+			E[ f(X_T)1_{(\tau>T)} ]	\text{,}
+		\]
+		where \( \tau \) is the hitting time to a boundary.
+	\end{prob}
+	\( \star \) This expectation reads the price of a \emph{barrier option} written on \( X \), whose pay-off is \( f \), knocked out at \( K \).
+\end{frame}
+%
+\subsection{One-dimensional symmetrization}
+%
+\begin{frame}\frametitle{One-dimensional symmetrization}
+	\begin{defi}[Arithmetic put-call symmetry]\mbox{}\\
+		\( ( \Omega, \mathcal F, P, (\mathcal F_t) ) \): complete filtered probability space\\
+		\hspace{120pt}which satisfies the usual conditions,\\
+		\(X\): real valued diffusion process, \(K\in\R\).\\	
+		\mbox{}\\
+		\( X \) satisfies arithmetic put-call symmetry (APCS) at K\\
+		\(:\Leftrightarrow \) \( \forall\, G\colon \R \to \R \text{; bounded measurable,}\ \forall\, t\ge0 \text{,} \)
+		\[
+			E[\,G(X_t-K) \mid X_0 = K\,] = E[\,G(K-X_t) \mid X_0 = K\,]\text{.}
+		\]
+		\mbox{ }
+	\end{defi}
+\end{frame}
+%
+\begin{frame}\frametitle{One-dimensional symmetrization}
+	\begin{prop}
+		If \(X\) satisfies APCS at \( K \), then for any \( T>0 \) and a bounded measurable function \( f \),
+		\[
+			E[ f(X_T) 1_{(\tau>T)} ] = E[ f(X_T) 1_{(X_T >K)} ] - E[ f(2K-X_T) 1_{(X_T <K)} ]	\text{,}	%\tag{a}\label{onethm}
+		\]
+		where
+		\[
+			\tau := \inf\{ t > 0 \colon X_t \le K \}\text{.}
+		\]
+	\end{prop}
+	\( \star \) The right-hand side reads the price of a combination of two \emph{plain-vanilla options}.
+	%\onslide<2->\( \star \) The left-hand side of (\ref{onethm}) reads the price of a \emph{barrier option} written on \( X \), whose pay-off is \( f \), knocked out at \( K \), and the right-hand side is the price of a combination of two \emph{plain-vanilla options}.
+\end{frame}
+%
+\begin{frame}\frametitle{One-dimensional symmetrization}
+	Consider the following \(1\)-dimensional SDE,
+	\[
+		dX_t = \sigma(X_t)dW_t + \mu(X_t)dt	\text{.}	\tag{a}\label{oneSDE}
+	\]
+	Here, we assume
+	\begin{equation}
+		\begin{gathered}
+			\sigma\colon \R \to \R,\ \mu \colon \R \to \R \text{\,;\,locally bounded, measurable,}\\
+			\exists\, C > 0,\ \forall x \in \R,\ |\sigma(x)| + |\mu(x)| \le C( 1+ |x| )\text{,}
+		\end{gathered}\tag{H1}\label{growth}
+	\end{equation}
+	and
+	\[
+		\sigma(x) \neq 0 \iff \sigma^{-2}\text{ is integrable in a neighborhood of \(x\).}	\tag{H2}\label{invertible}
+	\]
+	\onslide<2->{{\quad}Under (\ref{invertible}), there exists a unique (in law) solution satisfying the SDE (\ref{oneSDE}). (Engelbert and Schmidt 1985)
+	
+	{\quad}Moreover, under (\ref{growth}), the unique (in law) solution will not explode in finite time.
+	}
+\end{frame}
+%
+\begin{frame}\frametitle{One-dimensional symmetrization}
+	The following proposition is essentially a corollary to one of results of Carr and Lee (2009).
+	\begin{prop}
+		If the coefficients further satisfy the conditions
+		\[
+			\sigma(x) = \varepsilon(x) \sigma( 2K - x )\text{,}\quad	x \in \R \setminus \{ K \}\text{,}	\tag{C1}\label{sigmacondi}
+		\]
+		for a measurable \( \varepsilon \colon \R \to \{ -1,1 \} \) and
+		\[
+			\mu(x) = -\mu( 2K - x ),\quad	x \in \R \setminus \{ K \}\text{,}	\tag{C2}\label{mucondi}
+		\]
+		then \( X \) satisfies APCS at \( K \).
+	\end{prop}
+\end{frame}
+%
+\begin{frame}\frametitle{One-dimensional symmetrization}
+	Imamura, Ishigaki, and Okumura (2014) introduced a scheme called \emph{``symmetrization''}:\\
+	In the same setting as the above, put
+	\begin{align*}
+		\tilde{\sigma}(x) &:=
+		\begin{cases}
+			\sigma(x)\text{,}		&x>K		\text{,}\\
+			\sigma(2K-x)\text{,}	&x \le K	\text{,}
+		\end{cases}\\
+	%
+		\tilde{\mu}(x) &:=
+		\begin{cases}
+			\mu(x)\text{,}		&x>K		\text{,}\\
+			-\mu(2K-x)\text{,}	&x \le K	\text{,}
+		\end{cases}
+	\end{align*}
+	and consider the SDE
+	\[
+		d\tilde{X}_t = \tilde{\sigma}(\tilde{X}_t)dW_t + \tilde{\mu}(\tilde{X}_t)dt\text{.}	%\tag{b}\label{onetildeSDE}
+	\]
+	\onslide<2->{
+	Then, this SDE has a law-unique solution \( \tilde{X} \) by (Engelbert and Schmidt 1984) again. Also, its coefficients have the symmetric conditions (\ref{sigmacondi}) and (\ref{mucondi}) so \( \tilde{X} \) satisfies APCS at \( K \) by the previous proposition.
+	}
+\end{frame}
+%
+\begin{frame}\frametitle{One-dimensional symmetrization}
+	Besides, they proved the following theorem:
+	\begin{thm}[Imamura, Ishigaki, and Okumura 2014]
+		Assume \( X_0 = \tilde{X}_0 >K \). For any \( T>0 \) and bounded measurable function \( f \),
+		\[
+			E[ f(X_T) 1_{(\tau>T)} ] = E[ f(\tilde{X}_T) 1_{(\tilde{X}_T >K)} ] - E[ f(2K-\tilde{X}_T) 1_{(\tilde{X}_T <K)} ]	\text{,}
+		\]
+		where
+		\[
+			\tau := \inf\{ t > 0 \colon X_t \le K \}\text{.}
+		\]
+	\end{thm}
+	%\onslide<2->\( \star \) The left-hand side of (\ref{onethm}) reads the price of a \emph{barrier option} written on \( X \), whose pay-off is \( f \), knocked out at \( K \), and the right-hand side is the price of a combination of two \emph{plain-vanilla options}.
+\end{frame}
+%
+%\subsection{\(d\)-dimensional symmetrization}	% leads a bug
+\subsection{Multi-dimensional symmetrization}
+%
+\begin{frame}\frametitle{Multi-dimensional symmetrization}
+	Consider the following \(d\)-dimensional SDE
+	\[
+		dX_t = \sigma(X_t)dW_t + \mu(X_t)dt	\text{.}
+	\]
+	with \( X_0 \in \R^d \). Here,\\
+	\( W \equiv (W_t)_{t\ge0} \) : \(d^{\prime}\)-dimensional Wiener process (\(d^{\prime} \le d\))
+
+	and we assume
+	\[
+		\begin{gathered}
+			\sigma\colon \R^d \to \R^{ d \times d^\prime },\ \mu \colon \R^d \to \R^d \text{\,;\,piecewise continuous,}\\
+			\exists\, C > 0,\ \forall x \in \R^d,\ |\sigma(x)| + |\mu(x)| \le C( 1+ |x| )\text{.}
+		\end{gathered}
+	\]
+	%\( \sigma \colon \R^d \to \R^{ d \times d^\prime } \), \( \mu \colon \R^d \to \R^d \) ;\\
+	%piecewise continuous, at most linear growth.
+	
+	{\quad}Also we \emph{assume} this SDE has a law-unique solution for each initial point \( X_0 \in \R^d \).
+\end{frame}
+%
+\begin{frame}\frametitle{Multi-dimensional symmetrization}
+	Let \( \alpha \in \R^d \setminus \{ 0 \} \) and \( h \in \R \). Denote
+	\begin{gather*}
+		\begin{aligned}
+		H_{\alpha,h} := \{ x\in \R^d \mid \langle \alpha, x \rangle = h \}\text{,} && H_{\alpha,h}^+ := \{ x\in \R^d \mid \langle \alpha, x \rangle > h \}\text{,}
+		\end{aligned}	\\
+		T_\alpha := I - \frac{2}{|\alpha|^2} \alpha \otimes \alpha	\text{,}\\
+		s_{\alpha, h}(x) := x - ( \langle x,\alpha \rangle - h ) \frac{ 2\alpha }{ |\alpha|^2 } = T_\alpha x + \frac{2h}{|\alpha|^2} \alpha	\text{,}\quad	( x \in \R^d )\text{.}
+	\end{gather*}
+	
+	Then,
+	\begin{itemize}
+	\item \( T_\alpha \) is a \( d \times d \) orthogonal matrix such that \( T_\alpha^2 = I \) and \( T_\alpha \alpha = -\alpha \).
+	\item \( s_{\alpha,h}^2 \colon \R^d \to \R^d \) is an identity map.
+	\item \( \R^d = \overline{ H_{\alpha,h}^+ } \cup s_{\alpha,h}( H_{\alpha,h}^+ ) \) ; disjoint.
+	\end{itemize}
+\end{frame}
+%
+\begin{frame}\frametitle{Multi-dimensional symmetrization}
+	For a piecewise continuous map \( U_{\bullet} \colon \R^d \to O(d^\prime) \), define
+	\begin{align*}
+		\tilde{\sigma}(x) & := \sigma(x)U_x 1_{ \overline{H_{\alpha,h}^+} }(x) + T_\alpha \sigma(s_{\alpha,h}(x)) U_x 1_{ s_{\alpha,h}( H_{\alpha,h}^+ ) }(x)\text{,}\\
+		\tilde{\mu}(x) & := \mu(x) 1_{ \overline{H_{\alpha,h}^+} }(x) + T_\alpha \mu(s_{\alpha,h}(x)) 1_{ s_{\alpha,h}( H_{\alpha,h}^+ ) }(x)\text{,}
+	\end{align*}
+	and consider the following SDE:
+	\[\label{tildeSDE}
+		d\tilde{X}_t = \tilde{\sigma}( \tilde{X}_t ) dW_t + \tilde{\mu}( \tilde{X}_t ) dt	\tag{b}
+	\]
+	with \( \tilde{X}_0 = X_0 \), which we call \emph{symmetrization} of \( X \) with respect to \( H_{\alpha,h} \).
+\end{frame}
+%
+\begin{frame}\frametitle{Multi-dimensional symmetrization}
+	Let
+	\[
+		\tau_{\alpha,h} := \inf \{ t>0 \colon X_t \notin H_{\alpha,h}^+ \}\text{.}
+	\]
+	\begin{thm}[Akahori and Imamura 2014; reduced version]	
+		If (\ref{tildeSDE}) also has a law-unique solution, then for any \( T>0 \) and \( f \colon \R^d \to \R \) ; bounded measurable with
+		\[
+			\mathsf{supp}(f) \left( = \{ x \in \R^d \colon f(x) \neq 0 \} \right) \subset H_{\alpha,h}^+	\text{,}
+		\]
+		it holds that
+		\[
+			E[ f(X_T) 1_{(\tau_{\alpha,h}>t)} ] = E[ f(\tilde{X}_T) ] - E[ f(s_{\alpha,h}(\tilde{X}_T)) ]\text{.}
+		\]
+	\end{thm}
+\end{frame}
+%
+\section{Current problem}
+\subsection{Hitting time to smooth boundary}
+%
+\begin{frame}\frametitle{Symmetrization over a line bundle}
+	The next target is not a hyperplain but a smooth boundary case:
+	
+	Let \( d \ge 2 \) and consider the following \(d\)-dimensional SDE
+	\[
+		dV_t = \sigma(V_t)dW_t + \mu(V_t)dt	\tag{c}\label{smoothSDE}
+	\]
+	with assuming it has a law-unique solution.
+	
+	Then, for \( g \in C^2(\R^d) \) and \( c \in \R \), define
+	\[
+		\tau := \inf\{ t > 0 \colon g(V_t) < c \}\text{.}
+	\]
+	Our target is to obtain a numerical approximation of
+	\[
+		E[ F(V_T) 1_{(\tau>T)} ]
+	\]
+	for bounded measurable function \( F \) with
+	\[
+		\mathsf{supp}F \subset \{ v \in \R^d \colon g(v) \ge c \} \text{.}
+	\]
+\end{frame}
+%
+\begin{frame}\frametitle{Symmetrization over a line bundle}
+	{\quad}Hishida, Ishigaki, and Okumura (2019) introduced the following method and submitted a certain conjecture:
+	
+	{\quad}Their scheme consists of lifting the SDE (\ref{smoothSDE}) to the following \( (d+1) \)-dimensional SDE
+	\[
+		\begin{cases}
+			dV_t = \sigma(V_t)dW_t + \mu(V_t)dt\text{,}	\\
+			dZ_t = \nabla g(V_t) \sigma(V_t) dW_t + \frac{1}{2} \left( 2\nabla g \cdot \mu(V_t) + \nabla \otimes \nabla g \cdot \sigma \otimes \sigma (V_t) \right) dt \text{,}	\\
+			Z_0 = g( V_0 )\text{,}
+		\end{cases}		\tag{d}\label{systemofSDE}
+	\]
+	to apply Akahori--Imamura's (multi-dimensional) symmetrization. It is possible because the hitting time is now lifted to the one to a hyperplane
+	\[
+		H = \{ (x_1,\dots, x_{d+1}) \in \R^{d+1} \colon x_{d+1} = c \}\text{.}
+	\]
+\end{frame}
+%
+\begin{frame}\frametitle{Symmetrization over a line bundle}
+	Then, we can rewrite the system of SDEs (\ref{systemofSDE}) as
+	\begin{align*}
+		dX_t = \sigma_*(X_t) dW_t + \mu_*(X_t) dt\text{,}	&&	X_0 = (V_0,g(V_0))\text{,}	\tag{e}\label{rewritten}
+	\end{align*}
+	with \( X = (V,Z) \) and some \( \sigma_* \), \(\mu_* \), which we can write explicitly.
+	
+	%Let \( \tilde{X} = ( \tilde{V}, \tilde{Z}) \) denote Akahori--Imamura's symmetrization of \( X \).
+	%
+	Now, their conjecture can be stated as the following:
+	\begin{conj}[Hishida, Ishigaki, and Okumura 2019]
+		In the same setting as the above, if the Akahori--Imamura's symmetrization of SDE (\ref{rewritten}) also has a law-unique solution \( \tilde{X} = ( \tilde{V}, \tilde{Z}) \), then
+		\[
+			E[ F(V_T) 1_{(\tau>T)} ] = E[ F(\tilde{V}_T) 1_{( \tilde{Z}_T \ge c )} ] - E[ F(\tilde{V}_T) 1_{( \tilde{Z}_T \le c )} ]\text{.}
+		\]
+	\end{conj}
+	%One of my aims is to prove this conjecture.
+\end{frame}
+%
+\begin{frame}\frametitle{Idea to prove the conjecture}
+	By looking at the general procedure of symmetrization with curve boundary, it's enough to prove the following claim:
+	\begin{claim}
+		For a given (nice) continuous semimartingale \(Y\),
+		\begin{align*}
+			&\text{\( Z \) is a weak solution to the SDE}	\\
+			\Longrightarrow &( Y_t, Z_t )_{t\ge0} \overset{d}{=} ( Y_t. -Z_t )_{t\ge0}	\text{.}
+		\end{align*}
+	\end{claim}
+\end{frame}
+%
+\subsection{New result}
+\begin{frame}\frametitle{Simulation of hitting time to 2-dimensional torus}
+	\begin{set}
+		\( (W^1,W^2,W^3) \): three dim. Wiener process,	\\
+		\( g(x,y,z) := (\sqrt{x^2+y^2}-R)^2 + z^2 \), \( (R>r) \)	\\
+		\( \tau := \{ t> 0 : g(W^1, W^2, W^3) < r^2 \} \).
+	\end{set}
+	\onslide<2->{
+	Let \( X^i \) be \( W^i \) for \( i=1,2,3 \). The additional process \( X^4 \) is geven by:
+	\begin{align*}
+		X^4_t &= g(W^1_0, W^2_0, W^3_0)	\\
+		&+ \int_0^t \left( 3 - \frac{R}{\sqrt{(W^1_s)^2 + (W^2_s)^2}}\right) \,ds + 2 \int_0^t W^3_s dW^3_s	\\
+		&+ 2 \int_0^t \left( 1 -\frac{R}{\sqrt{(W^1)^2_s + (W^2)^2_s}}\right) (W^1_s dW^1_s + W^2_s dW^2_s)		\text{.}
+	\end{align*}
+	}
+\end{frame}
+%
+\begin{frame}\frametitle{Simulation of hitting time to 2-dimensional torus}
+	Now \( X := (X^1,X^2,X^3,X^4) \) is a solution to the following SDE with
+	\[
+		s(x,y) := 1 - \frac{R}{\sqrt{x^2+y^2}}\text{,}
+	\]
+	\begin{align*}
+		d X_t &= 
+		\begin{pmatrix}
+		    1 & 0 & 0 \\
+		    0 & 1 & 0 \\
+		    0 & 0 & 1 \\
+		    2 s (W^1_t,W^2_t) W^1_t & 2 s (W^1_t,W^2_t) W^2_t & 2W^3_t 
+		\end{pmatrix}
+		%
+		\begin{pmatrix}
+		    dW^1_t \\ dW^2_t \\ dW^3_t
+		\end{pmatrix}	\\
+		&\hspace{130pt}+
+		\begin{pmatrix}
+		    0 \\ 0 \\ 0 \\
+		    s (W^1_t,W^2_t) + 2 
+		\end{pmatrix}
+		dt	\\
+		&=: \sigma(W^1_t,W^2_t,W^3_t) dW_t + \mu(W^1_t,W^2_t,W^3_t) dt	\text{,}
+	\end{align*}
+	starting at \((W^1_0,W^2_0,W^3_0,g(W^1_0,W^2_0,W^3_0)) \).
+\end{frame}
+%
+\begin{frame}\frametitle{Simulation of hitting time to 2-dimensional torus}
+	Lastly, the symmetrization \( \tilde{X} \) of \( X \) with respect to the hyperplane
+	\[
+		    H = \{ (x^1, x^2, x^3, x^4) \in \R^4 \colon x^4 = r^2 \}
+	\]
+	is given by the SDE with the coefficients
+	\begin{align*}
+		&\tilde{\sigma} (x^1, x^2, x^3, x^4) \\
+		&=	
+		\begin{cases}
+			\sigma (x^1,x^2,x^3) \text{,} &  (x^4 \geq r^2)	\\
+			\begin{pmatrix}
+				& E_3 \\
+				-2 s (x^1,x^2) x^1 & - 2 s (x^1,x^2) x^2 & - 2x^3 
+			\end{pmatrix}	\text{,}
+			& (x^4 < r^2)
+		\end{cases}		\\
+		&\tilde{\mu}	(x^1, x^2, x^3, x^4)	\\
+		&=
+		\begin{cases}
+			\mu(x^1,x^2,x^3)	\text{,}			&	(x^4 \ge r^2)	\\
+			(0, 0, 0, -s(x^1,x^2)-2 )^T	\text{.}	& (x^4<r^2)
+		\end{cases}		\\
+		& \text{ ( \( E_3 \): \( 3 \times 3 \) identity matrix, \( \bullet^T \): transposition. ) }
+		\end{align*}
+\end{frame}
+%
+%\appendix
+%
+\section*{References}
+%
+\begin{frame}\frametitle{References}
+	\begin{thebibliography}{9}
+	\beamertemplatetextbibitems
+		\item Engelbert, H. J. and Schmidt, W. (1985): ``On one-dimensional stochastic differential equations with generalized drift,'' \textit{Lecture Notes in Control and Information Sciences,} \textbf{69}, 143--155.
+		\item Carr, P. and Lee, R. (2009): ``Put--Call Symmetry: Extensions and Applications,'' \textit{Mathematical Finance,} \textbf{19}(4), 523--560.
+		\item Imamura, Y., Ishigaki, Y. and Okumura, T. (2014): ``A numerical scheme based on semi-static hedging strategy,'' \textit{Monte Carlo Methods and Applications,} \textbf{20}(4), 223--235.
+		\item Akahori, J. and Imamura, Y. (2014): ``On a symmetrization of diffusion processes,'' \textit{Quantitative Finance,} \textbf{14}(7), 1211--1216.
+		\item Hishida, Y., Ishigaki, Y., and Okumura, T. (2019): ``A Numerical Scheme for Expectations with First Hitting Time to Smooth Boundary,'' \textit{Asia--Pacific Financial Markets,} published online.
+	\end{thebibliography}
+\end{frame}
+%
+%\section*{Contents}
+\begin{frame}\frametitle{Contents}
+	\tableofcontents
+\end{frame}
+%
+\end{document}

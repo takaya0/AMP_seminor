@@ -1,0 +1,141 @@
+\documentclass[dvipdfmx,11pt]{beamer}		% for my notebook computer and my Mac computer
+%\documentclass[11pt]{beamer}			% for overleaf
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+%\usepackage{amsthm}
+
+\usetheme{Berlin}	%全体のデザイン
+
+\useoutertheme[subsection=false]{smoothbars}	%デザインのカスタマイズ
+
+\setbeamertemplate{navigation symbols}{}	%右下のちっちゃいナビゲーション記号を非表示
+
+\AtBeginSubsection[]	%サブセクションごとに目次を表示
+{\begin{frame}{Contents}
+	\tableofcontents[currentsubsection]
+\end{frame}}
+
+\newtheorem{defi}{Definition}
+\newtheorem{thm}[defi]{Theorem}
+\newtheorem{prop}[defi]{Proposition}
+\newtheorem{conj}[defi]{Conjecture}
+\newtheorem{prob}[defi]{Problem}
+\newtheorem{set}[defi]{Setting}
+\newtheorem{claim}[defi]{Claim}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\X}{\mathcal{X}}
+\newcommand{\Y}{\mathcal{Y}}
+\newcommand{\Hil}{\mathcal{H}}
+\title{Machine Learning tutorial}
+\author{Takaya KOIZUMI}
+\institute{Mathematical Science, B4}
+\date{Applied Mathematics and Physics informal seminor}
+\begin{document}
+    \begin{frame}\frametitle{}
+        \titlepage
+    \end{frame}
+    \section*{Contents}
+    \begin{frame}\frametitle{Contents}
+        \tableofcontents
+    \end{frame}
+    \section{機械学習の枠組み}
+    \subsection{機械学習とは}
+    \begin{frame}\frametitle{機械学習とは}
+        機械学習とは, 「関数近似論」である.
+        \begin{block}{世の中で機械学習を使って実現したと言われている技術}
+            \begin{enumerate}
+                \item 翻訳~~($\{$全ての日本語$\}$$\to$$\{$全ての英語$\}$という関数)
+                \item メール分類~~($\{$全てのメールの文章$\}$$\to$$\{$迷惑メール, 非迷惑メール$\}$という関数)
+                \item 音声認識~~($\{$音声$\}$$\to$$\{$文章$\}$という関数)
+            \end{enumerate}
+        \end{block}
+        もちろん, 間違いを起こすこともある. (大事なメールが, 迷惑メールに入ることも...)
+    \end{frame}
+    \begin{frame}\frametitle{数学的には}
+        前スライドの話を集合論を用いて, もう少し数学的にきちんと書くならば, 以下のようになるだろう.
+        \begin{block}{機械学習?}
+            $\X$, $\Y$をそれぞれ$\R^n$, $\R^m$の部分集合とする. 
+            この時, 良い関数$f:\X\to\Y$を見つけることを機械学習という. 
+        \end{block} 
+        しかし, この定義には以下の問題がある.
+        \begin{block}{上の定義の問題点}
+            \begin{enumerate}
+                \item 候補となる関数が多すぎる. (ヒントも何もないのに探せない)
+                \item 良い関数とは何か, 定義されていない.
+            \end{enumerate}
+        \end{block}
+    \end{frame}
+    \subsection{機械学習の数学的定式化へ}
+    \begin{frame}\frametitle{前半の問題解消}
+        では, まず前半の「候補となる関数が多すぎる.」という問題を解決していこう. \\ \indent
+        この問題の解決方法として, 人間がヒント(条件)を与えてあげることで, 関数全ての
+        集合ではなく, ある程度絞った集合$\Hil$にするということを考える. この$\Hil$のことを仮設空間(Hyposesis space)と呼ぶ.
+        \begin{defi}[仮設空間]
+            $\X$, $\Y$をそれぞれ$\R^n$, $\R^m$の部分集合とする. この時, 集合
+            \begin{equation*}
+                \Hil :=\{f_{\theta} :\X\to\Y\mid\text{$f_{\theta}$に関する条件}\}
+            \end{equation*}
+            のことを仮設空間と呼び, $\X$を特徴量空間, $\Y$をラベル空間と呼ぶ.
+        \end{defi}
+    \end{frame}
+    \begin{frame}\frametitle{後半の問題解消}
+        では, 後半の「良い関数」というものを定義していこう. 
+        機械学習において, 良い関数とは, 未知のデータ$X$に対して正しい値$Y$を返す関数である. 
+        そのために, 関数$f$に対してその良さを表す指標である汎化誤差を定義する.
+        \begin{defi}[汎化誤差, 損失関数]
+            $\Hil$を仮設空間, $(\Omega, \mathcal{F}, \mathbb{P})$を確率空間, $\rho$をデータの確率分布とする.
+            この時, 汎化誤差$\ell:\Hil\to\R$を, 
+            \begin{equation*}
+                \ell(f_{\theta}) = \mathbb{E}_{(X, Y)\sim\rho}[l(f_{\theta}(X), Y)]
+            \end{equation*}
+            と定義する. ここで, $l:\Y\times\Y\to\R$は損失関数と呼ばれる凸関数である. 
+        \end{defi}
+    \end{frame}
+    \begin{frame}
+        \frametitle{損失関数の具体例}
+        \begin{block}{損失関数}
+            ここで,　よく使われる損失関数の例をいくつか述べておく. 
+            \begin{enumerate}
+                \item 2乗損失関数 $l(y_1, y_2) = (y_1 - y_2)^2$
+                \item 交差エントロピー誤差 $l(y_1, y_2) = -y_1\log y_2$
+            \end{enumerate}
+        \end{block}
+        これで, 「良い関数」を作るためには, 汎化誤差$\ell$を最小化させるような仮設空間$\Hil$の元$f$を見つけば良いと言うことになったわけだが, 
+        汎化誤差には期待値が含まれるため, 直接最適化させることが難しい. そのため, 持っているデータを利用して別の関数を用意し, その関数を
+        最小化することを考える. 
+    \end{frame}
+    \begin{frame}
+        \frametitle{データと経験損失関数}
+        \begin{defi}[データ]
+            $(\Omega, \mathcal{F}, \mathbb{P})$を確率空間, $\rho$をデータの確率分布とする.
+            $\{(X_n, Y_n)\}_{n = 1}^{N}$を$\rho$に従う独立な確率変数列とする. $\{(X_n, Y_n)\}_{n = 1}^{N}$の観測値$\{(X_n(\omega), Y_n(\omega))\}_{n = 1}^{N}$
+            のことをデータ(Data)と呼び, $D = \{(x_n, y_n)\}_{n = 1}^{N}$と表記する.
+        \end{defi}
+        \begin{defi}[経験損失関数]
+            $\Hil$を仮設空間, $D = \{(x_n, y_n)\}_{n = 1}^{N}$をデータ, $l:\Y\times\Y\to\R$を
+            損失関数とする. この時, 経験損失関数$L_{D}:\Hil\to\R$を,
+            \begin{equation*}
+                L_{D}(f_{\theta}) = \sum_{n = 1}^{N}l(f_{\theta}(x_n), y_n)
+            \end{equation*}
+            と定義する. 
+        \end{defi}
+        
+    
+    \end{frame}
+    \section{単回帰と重回帰}
+    \subsection{単回帰分析}
+    \begin{frame}\frametitle{最も基礎的なモデル}
+        test
+    \end{frame}
+    
+    \subsection{重回帰分析}
+    \subsection{数値実験}
+    \section{過学習と正則化}
+    \begin{frame}\frametitle{非線形データへの対応}
+        
+    \end{frame}
+\end{document}
+
+
