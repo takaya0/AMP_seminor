@@ -4,6 +4,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 %\usepackage{amsthm}
+\usepackage{multicol}
 
 \usetheme{Berlin}	%全体のデザイン
 
@@ -15,11 +16,11 @@
 {\begin{frame}{Contents}
 	\tableofcontents[currentsubsection]
 \end{frame}}
-
 \newtheorem{defi}{Definition}
 \newtheorem{thm}[defi]{Theorem}
 \newtheorem{prop}[defi]{Proposition}
 \newtheorem{conj}[defi]{Conjecture}
+\newtheorem{exam}[defi]{Example}
 \newtheorem{prob}[defi]{Problem}
 \newtheorem{set}[defi]{Setting}
 \newtheorem{claim}[defi]{Claim}
@@ -28,6 +29,11 @@
 \newcommand{\X}{\mathcal{X}}
 \newcommand{\Y}{\mathcal{Y}}
 \newcommand{\Hil}{\mathcal{H}}
+\newcommand{\Loss}{\mathcal{L}_{D}}
+\newcommand{\MLsp}{(\X, \Y, D, \Hil, \Loss)}
+
+\newcommand{\argmax}{\mathop{\rm arg~max}\limits}
+\newcommand{\argmin}{\mathop{\rm arg~min}\limits}
 \title{Machine Learning tutorial}
 \author{Takaya KOIZUMI}
 \institute{Mathematical Science, B4}
@@ -38,7 +44,7 @@
     \end{frame}
     \section*{Contents}
     \begin{frame}\frametitle{Contents}
-        \tableofcontents
+            \tableofcontents
     \end{frame}
     \section{機械学習の枠組み}
     \subsection{機械学習とは}
@@ -56,7 +62,7 @@
     \begin{frame}\frametitle{数学的には}
         前スライドの話を集合論を用いて, もう少し数学的にきちんと書くならば, 以下のようになるだろう.
         \begin{block}{機械学習?}
-            $\X$, $\Y$をそれぞれ$\R^n$, $\R^m$の部分集合とする. 
+            $\X$, $\Y$をそれぞれ$\R^d$, $\R^m$の部分集合とする. 
             この時, 良い関数$f:\X\to\Y$を見つけることを機械学習という. 
         \end{block} 
         しかし, この定義には以下の問題がある.
@@ -73,11 +79,12 @@
         この問題の解決方法として, 人間がヒント(条件)を与えてあげることで, 関数全ての
         集合ではなく, ある程度絞った集合$\Hil$にするということを考える. この$\Hil$のことを仮設空間(Hyposesis space)と呼ぶ.
         \begin{defi}[仮設空間]
-            $\X$, $\Y$をそれぞれ$\R^n$, $\R^m$の部分集合とする. この時, 集合
+            $\X$, $\Y$をそれぞれ$\R^d$, $\R^m$の部分集合とする. この時, 集合
             \begin{equation*}
-                \Hil :=\{f_{\theta} :\X\to\Y\mid\text{$f_{\theta}$に関する条件}\}
+                \Hil :=\{f_{w} :\X\to\Y\mid\text{$f_{w}$に関する条件}\}
             \end{equation*}
-            のことを仮設空間と呼び, $\X$を特徴量空間, $\Y$をラベル空間と呼ぶ.
+            のことを仮設空間と呼び, $\X$を特徴量空間, $\Y$をラベル空間と呼ぶ. また, $f_w\in\Hil$を
+            仮設と呼ぶ. 
         \end{defi}
     \end{frame}
     \begin{frame}\frametitle{後半の問題解消}
@@ -88,7 +95,7 @@
             $\Hil$を仮設空間, $(\Omega, \mathcal{F}, \mathbb{P})$を確率空間, $\rho$をデータの確率分布とする.
             この時, 汎化誤差$\ell:\Hil\to\R$を, 
             \begin{equation*}
-                \ell(f_{\theta}) = \mathbb{E}_{(X, Y)\sim\rho}[l(f_{\theta}(X), Y)]
+                \ell(f_{\theta}) = \mathbb{E}_{(X, Y)\sim\rho}[l(f_{w}(X), Y)]
             \end{equation*}
             と定義する. ここで, $l:\Y\times\Y\to\R$は損失関数と呼ばれる凸関数である. 
         \end{defi}
@@ -99,7 +106,7 @@
             ここで,　よく使われる損失関数の例をいくつか述べておく. 
             \begin{enumerate}
                 \item 2乗損失関数 $l(y_1, y_2) = (y_1 - y_2)^2$
-                \item 交差エントロピー誤差 $l(y_1, y_2) = -y_1\log y_2$
+                \item 交差エントロピー誤差 $l(y_1, y_2) = -y_2\log y_1$
             \end{enumerate}
         \end{block}
         これで, 「良い関数」を作るためには, 汎化誤差$\ell$を最小化させるような仮設空間$\Hil$の元$f$を見つけば良いと言うことになったわけだが, 
@@ -110,27 +117,82 @@
         \frametitle{データと経験損失関数}
         \begin{defi}[データ]
             $(\Omega, \mathcal{F}, \mathbb{P})$を確率空間, $\rho$をデータの確率分布とする.
-            $\{(X_n, Y_n)\}_{n = 1}^{N}$を$\rho$に従う独立な確率変数列とする. $\{(X_n, Y_n)\}_{n = 1}^{N}$の観測値$\{(X_n(\omega), Y_n(\omega))\}_{n = 1}^{N}$
+            $\{(X_n, Y_n)\}_{n = 1}^{N}$を$\rho$に従う独立な確率変数列とした時, $\{(X_n, Y_n)\}_{n = 1}^{N}$の観測値$\{(X_n(\omega), Y_n(\omega))\}_{n = 1}^{N}$
             のことをデータ(Data)と呼び, $D = \{(x_n, y_n)\}_{n = 1}^{N}$と表記する.
         \end{defi}
         \begin{defi}[経験損失関数]
             $\Hil$を仮設空間, $D = \{(x_n, y_n)\}_{n = 1}^{N}$をデータ, $l:\Y\times\Y\to\R$を
-            損失関数とする. この時, 経験損失関数$L_{D}:\Hil\to\R$を,
+            損失関数とする. この時, 経験損失関数$\Loss:\Hil\to\R$を,
             \begin{equation*}
-                L_{D}(f_{\theta}) = \sum_{n = 1}^{N}l(f_{\theta}(x_n), y_n)
+                \Loss(f_{w}) = \sum_{n = 1}^{N}l(f_{\theta}(x_n), y_n)
             \end{equation*}
             と定義する. 
         \end{defi}
-        
-    
+    \end{frame}
+    \begin{frame}
+        \frametitle{機械学習と学習アルゴリズム}
+        さて, ここで改めて機械学習を定義しよう.
+        \begin{defi}[機械学習, 学習アルゴリズム]
+            $\Hil$を仮設空間, $D$をデータ, $\Loss$を経験損失関数とする. この時, 
+            アルゴリズム$\mathcal{A}$を用いて, $\Loss$を最小化・最大化させる過程のことを機械学習
+            (あるいは単に学習)と呼び, その時のアルゴリズム$\mathcal{A}$のことを学習アルゴリズムと呼ぶ. 
+            また, 最適解$f^{*}\in\Hil$を最適仮設と呼び, その時のパラメータ$w^{*}$を最適パラメータと呼ぶ. 
+        \end{defi}
+        これ以降, 5つ組$(\X, \Y, D, \Hil, \Loss)$をML空間と呼ぶことにする. 
     \end{frame}
     \section{単回帰と重回帰}
     \subsection{単回帰分析}
     \begin{frame}\frametitle{最も基礎的なモデル}
-        test
+        まず, 最も基礎的な機械学習モデルである単回帰分析を紹介する. 
+        \begin{exam}[単回帰分析]
+            $\MLsp$を以下で定義する. $\X = \R$, $\Y = \R$, 
+            \begin{align*}
+                \Hil &= \{f:\X\to\Y\mid f(x) = wx, w\in\R\},\\
+                \Loss(f) &= \sum_{i = 1}^{N}(f(x_i) - y_i)^2.
+            \end{align*}
+            このML空間$\MLsp$上で,
+            \begin{align*}
+                \argmin_{f\in\Hil}\Loss(f)
+            \end{align*}
+            を求める問題を単回帰分析という.
+        \end{exam}
+    \end{frame}
+    \begin{frame}
+        \frametitle{SRAの学習}
+        SRAは勾配降下法などを用いて解くこともできるが, 今回は解析的に最適パラメータを求める. 
+        SRAの経験損失関数は$w$に関して2次関数となっているので, 平方完成を用いると, 
+        \begin{equation*}
+            f^{*}(x) = w^{*}x, \hspace{20pt} w^* = \frac{\sum_{i = 1}^{N}x_{i}y_{i}}{\sum_{i = 1}^{N}x_{i}^2}
+        \end{equation*}
+        と定義される$f^*\in\Hil$が最適であることがわかる. 
+    \end{frame}
+    \subsection{重回帰分析}
+    \begin{frame}
+        \frametitle{重回帰分析}
+        \begin{exam}[重回帰分析]
+            ML空間$\MLsp$を以下のように定義する.\\
+            $\X = \R^d(N\geq d)$, $\Y = \R$, 
+            \begin{align*}
+                \Hil &= \{f:\X\to\Y\mid f(x) = W^{\top}x, W\in\R^{d}, b\in\R\},\\
+                \Loss(f) &= \sum_{i = 1}^{N}(f(x_i) - y_i)^2.
+            \end{align*}
+            このML空間$\MLsp$上で
+            \begin{align*}
+                \argmin_{f\in\Hil}\Loss(f)
+            \end{align*}
+            を求める問題を重回帰分析という.
+        \end{exam}
+    \end{frame}
+    \begin{frame}
+        \frametitle{MRAの学習}
+        SRAの時と同様に解析的に最適パラメータを求める. $X\in\R^{N\times d}$, $\mathbf{y}\in\R^N$を
+        $X = [x_1 x_2 \ldots x_N]^{T}$, $\mathbf{y} = (y_{1}, y_{2}, \cdots, y_{N})^{\top}$と定義する. もし$X$が可逆であるとすると, 
+        \begin{align*}
+            f^{*}(x) = W_*^{\top}x, \hspace{20pt} W_* = (X^\top X)^{-1}X^\top\mathbf{y}
+        \end{align*}
+        と定義される$f^*\in\Hil$が最適であることがわかる. 
     \end{frame}
     
-    \subsection{重回帰分析}
     \subsection{数値実験}
     \section{過学習と正則化}
     \begin{frame}\frametitle{非線形データへの対応}
