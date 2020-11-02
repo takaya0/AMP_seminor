@@ -5,6 +5,12 @@
 \usepackage{amssymb}
 %\usepackage{amsthm}
 \usepackage{multicol}
+\usepackage{listings}
+\usepackage{otf}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{tikz}
+\usepackage{mathtools}
 
 \usetheme{Berlin}	%全体のデザイン
 
@@ -25,6 +31,7 @@
 \newtheorem{set}[defi]{Setting}
 \newtheorem{claim}[defi]{Claim}
 
+\newcommand{\N}{\mathbb{N}}
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\X}{\mathcal{X}}
 \newcommand{\Y}{\mathcal{Y}}
@@ -145,7 +152,7 @@
     \begin{frame}\frametitle{最も基礎的なモデル}
         まず, 最も基礎的な機械学習モデルである単回帰分析を紹介する. 
         \begin{exam}[単回帰分析]
-            $\MLsp$を以下で定義する. $\X = \R$, $\Y = \R$, 
+            ML空間$\MLsp$を以下で定義する. $\X = \R$, $\Y = \R$, 
             \begin{align*}
                 \Hil &= \{f:\X\to\Y\mid f(x) = wx, w\in\R\},\\
                 \Loss(f) &= \sum_{i = 1}^{N}(f(x_i) - y_i)^2.
@@ -173,7 +180,7 @@
             ML空間$\MLsp$を以下のように定義する.\\
             $\X = \R^d(N\geq d)$, $\Y = \R$, 
             \begin{align*}
-                \Hil &= \{f:\X\to\Y\mid f(x) = W^{\top}x, W\in\R^{d}, b\in\R\},\\
+                \Hil &= \{f:\X\to\Y\mid f(x) = W^{\top}x + b, W\in\R^{d}, b\in\R\},\\
                 \Loss(f) &= \sum_{i = 1}^{N}(f(x_i) - y_i)^2.
             \end{align*}
             このML空間$\MLsp$上で
@@ -185,18 +192,145 @@
     \end{frame}
     \begin{frame}
         \frametitle{MRAの学習}
-        SRAの時と同様に解析的に最適パラメータを求める. $X\in\R^{N\times d}$, $\mathbf{y}\in\R^N$を
+        SRAの時と同様に解析的に最適パラメータを求める(簡単のために$b = 0$とする). $X\in\R^{N\times d}$, $\mathbf{y}\in\R^N$を
         $X = [x_1 x_2 \ldots x_N]^{T}$, $\mathbf{y} = (y_{1}, y_{2}, \cdots, y_{N})^{\top}$と定義する. もし$X$が可逆であるとすると, 
         \begin{align*}
             f^{*}(x) = W_*^{\top}x, \hspace{20pt} W_* = (X^\top X)^{-1}X^\top\mathbf{y}
         \end{align*}
-        と定義される$f^*\in\Hil$が最適であることがわかる. 
+        と定義される$f^*\in\Hil$が最適であることがわかる. なお, $b\neq0$の場合も
+        デザイン行列$X$を変更し, $w_{0} = b$とすることで, 上記の計算の場合に帰着することができる\cite{PFN}.
     \end{frame}
-    
-    \subsection{数値実験}
     \section{過学習と正則化}
-    \begin{frame}\frametitle{非線形データへの対応}
-        
+    \subsection{多項式回帰}
+    \begin{frame}
+        \frametitle{基底関数}
+        この節では, はじめに多項式回帰を紹介する. 
+        その前に基底関数というものを導入する. 
+        \begin{defi}[基底関数]
+            $\X$を$\R$の部分集合とする. $\X$から$\X$への$C^1$級関数列$\{\phi_{n}\}_{n = 1}^{d}$が
+            $\R$上1次独立である時, $\Phi(x) = (\phi_{0}(x), \phi_{1}(x), \ldots, \phi_{d}(x))$で定義される$\Phi:\X\to\R^{d + 1}$
+            を基底関数と呼ぶ. 
+        \end{defi}
+        基底関数を用いることで, 非線形なデータにも対応することができる. 
+    \end{frame}
+    \begin{frame}\frametitle{多項式回帰}
+        \begin{exam}[多項式回帰]
+            ML空間$\MLsp$を以下のように定義する.\\
+            $\X = \R, \Y = \R$, 
+            \begin{align*}
+                \Hil &= \{f:\X\to\Y\mid f(x) = W^{\top}\Phi(x), W\in\R^{d + 1}\},\\
+                \Loss(f) &= \sum_{i = 1}^{N}(f(x_i) - y_i)^2.
+            \end{align*}
+            ここで, $\phi_{n}(x) = x^{n}$, $n\in\{0, 1, \cdots, d\}$とする.\\
+            このML空間$\MLsp$上で
+            \begin{align*}
+                \argmin_{f\in\Hil}\Loss(f)
+            \end{align*}
+            を求める問題を多項式回帰という. 
+        \end{exam}
+    \end{frame}
+    \begin{frame}
+        \frametitle{多項式回帰での学習}
+            今回も解析的に解くことにする. $X = [\Phi(x_1), \Phi(x_{2}), \cdots, \Phi(x_N)]^{T}\in\R^{N\times d}$とし, 
+            $\mathbf{y} = (y_{1}, y_{2}, \cdots, y_{N})^{T}\in\R^{N}$とする. この時, 最適仮説$f^{*}$は
+            重回帰分析と同様に$W = (X^\top X)^{-1}X^\top\mathbf{y}$とすれば
+            \begin{align*}
+                f^{*}(x) = W^{\top}x
+            \end{align*}
+            である. 
+            \begin{block}{学習パラメータとハイパーパラメータ}
+                多項式回帰の多項式の次数$d\in\N$や基底関数$\{\phi_{n}\}_{n = 1}^{d}$のように
+                コンピュータに学習させるのではなく, 機械学習モデルの設計者が設定するパラメータのことを
+                ハイパーパラメータと呼ぶ. 一方, $W\in\R^{d + 1}$のように, データからコンピュータが自動で学習
+                するパラメータのことを学習パラメータと呼び, $\Theta$と表す.
+            \end{block}
+    \end{frame}
+    \begin{frame}
+        \frametitle{多項式回帰の過学習}
+        \begin{columns}[t]
+            \begin{column}{0.65\textwidth} 
+                \begin{figure}
+                    \centering
+                    \includegraphics[width = 6.8cm]{Image/overfitting.png}
+                    \caption{$d = 3$の時の多項式回帰}
+              　\end{figure}
+            \end{column}
+            \begin{column}{0.75\textwidth}
+                多項式回帰で学習を行うと左の図\\
+                のように, 「教師データには適合し\\ているが, 未知のデータ
+                には全く対\\応できない」モデルが学習されて\\しまう. \\
+                \indent
+                このように, 訓練誤差に対して, \\
+                汎化誤差が大きくなってしまう\\
+                ことを\textbf{過学習}と呼ぶ. 
+            \end{column}
+        \end{columns}
+    \end{frame}
+    \subsection{多項式回帰と正則化}
+    \begin{frame}
+        \frametitle{正則化}
+        過学習を防ぐために, 学習パラメータを制限する方法のことを
+        正則化(regularization)と呼ぶ. 具体的には経験損失関数に正則化項と
+        いうものを加えて, パラメータが大きくなり過ぎないようにする. 
+        \begin{defi}[正則化]
+            $\Loss:\Hil\to\R$を経験損失関数とする. $\Loss^{R} := \Loss + L^{R}$とする.
+            この時, $\Loss^{R}$を$\Loss$の正則化と呼び, $L^R:\Theta\to\R$を正則化項と呼ぶ.
+        \end{defi}
+    \end{frame}
+    \begin{frame}
+        \frametitle{Ridge正則化多項式回帰}
+        \begin{exam}[Ridge正則化多項式回帰]
+            $\lambda\in\R^{+}\coloneqq\{x\in\R\mid x\geq0\}$, $d\in\N$を任意にとる. 多項式回帰のML空間$\MLsp$の
+            経験損失関数を
+            \begin{align*}
+                \Loss(f) &= \sum_{i = 1}^{N}(f(x_i) - y_i)^2 + \lambda W^\top W
+            \end{align*}
+            と正則化する. (ここで, $\lambda W^{\top}W$が正則化項である.) 
+            このML空間$\MLsp$上で
+            \begin{align*}
+                \argmin_{f\in\Hil}\Loss(f)
+            \end{align*}
+            を求める問題をRidge正則化多項式回帰という. 
+        \end{exam}
+    \end{frame}
+    \begin{frame}
+        \frametitle{Ridge多項式回帰での学習}
+            $X = [\Phi(x_1), \Phi(x_{2}), \cdots, \Phi(x_N)]^{T}\in\R^{N\times d}$とし, 
+            $\mathbf{y} = (y_{1}, y_{2}, \cdots, y_{N})^{T}\in\R^{N}$とする. この時, 最適仮説$f^{*}$は
+            \begin{align*}
+                f^{*}(x) = W_*^{\top}x, \hspace{10pt} W_* = (X^\top X + \lambda I)^{-1}X^\top\mathbf{y}
+            \end{align*}
+            となる. (ここで, $I$は単位行列である. )
+            % あとで計算する.  
+    \end{frame}
+    \begin{frame}
+        \frametitle{正則化の実験}
+        \begin{columns}[t]
+            \begin{column}{0.65\textwidth} 
+                \begin{figure}
+                    \centering
+                    \includegraphics[width = 6.8cm]{Image/regulared.png}
+                    \caption{$d = 3$の時のRidge正則化多項式回帰}
+              　\end{figure}
+            \end{column}
+            \begin{column}{0.75\textwidth}
+                正則化を行うことで, データに完全\\
+                にfitせず, 未知のデータにも\\
+                ある程度対応できるようになった. \\
+                ただ, -10以下のデータに関しては\\
+                逆に精度が下がる結果になって\\
+                しまった. (方程の方が綺麗...)
+            \end{column}
+        \end{columns}
+    \end{frame}
+    \section{References}
+%
+    \begin{frame}\frametitle{References}
+	    \begin{thebibliography}{9}
+	    \beamertemplatetextbibitems
+		    \bibitem{PFN} Preferred Networks, ディープラーニング入門 Chainer チュートリアル,
+            https://tutorials.chainer.org/ja/index.html, 2019
+	    \end{thebibliography}
     \end{frame}
 \end{document}
 
