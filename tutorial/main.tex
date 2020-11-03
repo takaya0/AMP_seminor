@@ -20,7 +20,9 @@
 
 \AtBeginSubsection[]	%サブセクションごとに目次を表示
 {\begin{frame}{Contents}
-	\tableofcontents[currentsubsection]
+    \begin{multicols}{2}
+        \tableofcontents[currentsubsection]
+    \end{multicols}
 \end{frame}}
 \newtheorem{defi}{Definition}
 \newtheorem{thm}[defi]{Theorem}
@@ -41,6 +43,8 @@
 
 \newcommand{\argmax}{\mathop{\rm arg~max}\limits}
 \newcommand{\argmin}{\mathop{\rm arg~min}\limits}
+
+
 \title{Machine Learning tutorial}
 \author{Takaya KOIZUMI}
 \institute{Mathematical Science, B4}
@@ -51,7 +55,9 @@
     \end{frame}
     \section*{Contents}
     \begin{frame}\frametitle{Contents}
+        \begin{multicols}{2}
             \tableofcontents
+        \end{multicols}
     \end{frame}
     \section{機械学習の枠組み}
     \subsection{機械学習とは}
@@ -131,7 +137,7 @@
             $\Hil$を仮設空間, $D = \{(x_n, y_n)\}_{n = 1}^{N}$をデータ, $l:\Y\times\Y\to\R$を
             損失関数とする. この時, 経験損失関数$\Loss:\Hil\to\R$を,
             \begin{equation*}
-                \Loss(f_{w}) = \sum_{n = 1}^{N}l(f_{\theta}(x_n), y_n)
+                \Loss(f_{w}) = \sum_{n = 1}^{N}l(f_{w}(x_n), y_n)
             \end{equation*}
             と定義する. 
         \end{defi}
@@ -323,11 +329,133 @@
             \end{column}
         \end{columns}
     \end{frame}
-    \section{References}
-%
+    \section{ロジスティック回帰}
+    \subsection{分類問題とone-hotベクトル}
+    \begin{frame}
+        \frametitle{分類問題とone-hotベクトル}
+        今までは1つの実数値を予測するモデルである「回帰」と呼ばれる手法をいくつか紹介してきたが, 
+        今回は入力データがどのクラスに所属するのかを予測するモデルである「分類」モデルを扱う. 
+        そのために, 準備としてソフトマックス関数とone-hotベクトルを紹介する. 
+        \begin{defi}[ソフトマックス関数]
+            $\psi:\R^d\to\R^d$を以下で定義する.
+            \begin{align*}
+                \psi(x)_{i} = \frac{\exp(x_i)}{\sum_{k = 1}^d\exp(x_k)}
+            \end{align*}
+            この時, $\psi$をソフトマックス関数と呼ぶ.
+        \end{defi}
+        \begin{defi}[one-hot ベクトル]
+            $y\in\R^m$が第$c\in\{1, 2, \cdots, m\}$成分が1であり, 残りの成分が0である時, 
+            $y$をone-hotベクトルという.
+        \end{defi}
+    \end{frame}
+    \begin{frame}
+        \frametitle{クラスラベルとone-hotベクトル}
+        one-hotベクトルの意味について解説する. \\
+        ジャンケンの手の画像が与えられた時にその手が「グー, チョキ, パー」のうちどれなのかを
+        予測するモデルを構築するとする($m = 3$). 
+        この時, データセット$\{(x_{n}, y_{n})\}_{n = 1}^{N}\subset \R^{28\times 28}\times\{\text{グー, チョキ, パー}\}$を
+        \begin{enumerate}
+            \item $y_{i} =$ "グー"なら$y_i = (1, 0, 0)$
+            \item $y_{i} =$ "チョキ"なら$y_i = (0, 1, 0)$
+            \item $y_{i} =$ "パー"なら$y_i = (0, 0, 1)$
+        \end{enumerate}
+        として変更し, 新たなデータセット$\{(x_{n}, y_{n})\}_{n = 1}^{N}\subset \R^{28\times 28}\times\R^3$を得る. 
+    \end{frame}
+    \subsection{ロジスティック回帰と勾配降下法}
+    \begin{frame}
+        \frametitle{ロジスティック回帰}
+        \begin{exam}[$m$値分類ロジスティック回帰]
+            ML空間$\MLsp$を以下のように定義する.\\
+            $\X=\R^d$, $\Y = \R^m$, 
+            \begin{align*}
+                \Hil &= \{f:\X\to\Y\mid f(x) = \psi(Wx + b), W\in\R^{m\times d}, b\in\R^m\},\\
+                \Loss(f) &= -\sum_{n = 1}^{N}\sum_{k = 1}^{m}y_{nk}\log f(x_n)_{k},
+            \end{align*}
+            ここで$\psi:\R^m\to\R^m$はソフトマックス関数であり, $y_{n}$はone-hotベクトルである. このML空間$\MLsp$上で
+            \begin{align*}
+                \argmin_{f\in\Hil}\Loss(f)
+            \end{align*}
+            を求める問題を$m$値分類ロジスティック回帰という.
+        \end{exam}
+    \end{frame}
+    \begin{frame}
+        \frametitle{勾配降下法}
+        今回は解析的に, 経験損失関数の解を求めるのではなく, 勾配降下法というアルゴリズムを用いて, 
+        解くことにする. 
+        \begin{algorithm}[H]
+            \caption{Gradient Decent}
+            \begin{algorithmic}
+                \REQUIRE F: $C^1$ function on $\R^{d}$
+                \REQUIRE $0<\alpha<1$ : learning rate 
+                \REQUIRE $\theta$: Initial parameter vector
+                \STATE $\theta\leftarrow\theta_{0}$
+                \WHILE{$\theta$ not converged} 
+                \STATE $\theta\leftarrow\theta - \alpha\nabla F(\theta)$ 
+                \ENDWHILE
+                \RETURN $\theta$
+            \end{algorithmic}
+        \end{algorithm}
+    \end{frame}
+    \begin{frame}
+        \frametitle{経験損失関数の勾配計算}
+        今回の経験損失関数に対して$w_{ij}, b_{i}$についての偏微分を計算すると以下のようになる. 
+        \begin{equation*}
+            \frac{\partial\Loss}{\partial w_{ij}} = -\sum_{n = 1}^{N}\left(y_{ni} - f(x_{n})_{i}\right)x_{nj}, \hspace{10pt}\frac{\partial\Loss}{\partial b_{i}} = -\sum_{n = 1}^{N}(y_{ni} - f(x_{n})_{i})
+        \end{equation*}
+        したがって, $X = [x_{1}, x_{2}, \cdots, x_{N}]$, $Y = [y_1, y_2, \cdots, y_N]$, $F = [f(x_1), f(x_2), \cdots, f(x_N)]$, 
+        $\mathbf{1} = [1, 1, \cdots, 1]^{\top}\in\R^{N\times 1}$とすれば,
+        \begin{equation*}
+            \frac{\partial\Loss}{\partial W} = -(Y - F)X^{\top}, \hspace{10pt}  \frac{\partial\Loss}{\partial b} = -(Y - F)\mathbf{1}
+        \end{equation*}
+        となる. 
+    \end{frame}
+    \subsection{MNISTでの学習結果}
+    \begin{frame}
+        \frametitle{MNISTでの学習}
+        MNISTとは以下のような$28\times28$ピクセルの数字か書かれたデータセットである. 
+        \begin{figure}[htbp]
+            \begin{minipage}{0.32\hsize}
+                \centering
+                \includegraphics[width = 5.3cm]{Image/MNIST_sample1.eps}
+                \caption{数字の5}
+            \end{minipage}
+            \begin{minipage}{0.32\hsize}
+                \centering
+                \includegraphics[width = 5.3cm]{Image/MNIST_sample2.eps}
+                \caption{数字の9}
+            \end{minipage}
+            \begin{minipage}{0.32\hsize}
+                \centering
+                \includegraphics[width = 5.3cm]{Image/MNIST_sample3.eps}
+                \caption{数字の6}
+            \end{minipage}
+        \end{figure}
+    \end{frame}
+    \begin{frame}
+        \frametitle{多項式回帰の過学習}
+        \begin{columns}[t]
+            \begin{column}{0.65\textwidth} 
+                \begin{figure}
+                    \centering
+                    \includegraphics[width = 6.8cm]{Image/MNIST_Experiment.eps}
+                    \caption{$\alpha = 0.0001$とした時の, MNSIT実験の結果}
+              　\end{figure}
+            \end{column}
+            \begin{column}{0.75\textwidth}
+                ロジスティック回帰でMNISTを\\
+                学習した結果を左に示す. \\
+                テストデータに関しても$85\%$程度\\
+                の精度がでた. 
+            \end{column}
+        \end{columns}
+    \end{frame}
+    \section{ニューラルネットワークと深層学習}
+    \subsection{ニューラルネットワークと活性化関数}
+    \subsection{ニューラルネットワークと普遍性定理}
+    \section*{References}
     \begin{frame}\frametitle{References}
-	    \begin{thebibliography}{9}
-	    \beamertemplatetextbibitems
+        \begin{thebibliography}{9}
+            \beamertemplatetextbibitems
 		    \bibitem{PFN} Preferred Networks, ディープラーニング入門 Chainer チュートリアル,
             https://tutorials.chainer.org/ja/index.html, 2019
 	    \end{thebibliography}
