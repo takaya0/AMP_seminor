@@ -11,7 +11,7 @@
 \usepackage{algorithmic}
 \usepackage{tikz}
 \usepackage{mathtools}
-
+\usepackage{comment}
 \usetheme{Berlin}	%全体のデザイン
 
 \useoutertheme[subsection=false]{smoothbars}	%デザインのカスタマイズ
@@ -223,10 +223,12 @@
         \begin{exam}[多項式回帰]
             ML空間$\MLsp$を以下のように定義する.\\
             $\X = \R, \Y = \R$, 
+            \footnotesize
             \begin{align*}
                 \Hil &= \{f:\X\to\Y\mid f(x) = W^{\top}\Phi(x), W\in\R^{d + 1}\},\\
                 \Loss(f) &= \sum_{i = 1}^{N}(f(x_i) - y_i)^2.
             \end{align*}
+            \normalsize
             ここで, $\phi_{n}(x) = x^{n}$, $n\in\{0, 1, \cdots, d\}$とする.\\
             このML空間$\MLsp$上で
             \begin{align*}
@@ -333,9 +335,8 @@
     \subsection{分類問題とone-hotベクトル}
     \begin{frame}
         \frametitle{分類問題とone-hotベクトル}
-        今までは1つの実数値を予測するモデルである「回帰」と呼ばれる手法をいくつか紹介してきたが, 
         今回は入力データがどのクラスに所属するのかを予測するモデルである「分類」モデルを扱う. 
-        そのために, 準備としてソフトマックス関数とone-hotベクトルを紹介する. 
+        そのために, 準備としてソフトマックス関数とone-hotベクトルを導入する. 
         \begin{defi}[ソフトマックス関数]
             $\psi:\R^d\to\R^d$を以下で定義する.
             \begin{align*}
@@ -350,7 +351,7 @@
     \end{frame}
     \begin{frame}
         \frametitle{クラスラベルとone-hotベクトル}
-        one-hotベクトルの意味について解説する. \\
+        one-hotベクトルの使い方について解説する. \\
         ジャンケンの手の画像が与えられた時にその手が「グー, チョキ, パー」のうちどれなのかを
         予測するモデルを構築するとする($m = 3$). 
         この時, データセット$\{(x_{n}, y_{n})\}_{n = 1}^{N}\subset \R^{28\times 28}\times\{\text{グー, チョキ, パー}\}$を
@@ -366,11 +367,13 @@
         \frametitle{ロジスティック回帰}
         \begin{exam}[$m$値分類ロジスティック回帰]
             ML空間$\MLsp$を以下のように定義する.\\
-            $\X=\R^d$, $\Y = \R^m$, 
+            $\X=\R^d$, $\Y = \R^m$,
+            \footnotesize 
             \begin{align*}
                 \Hil &= \{f:\X\to\Y\mid f(x) = \psi(Wx + b), W\in\R^{m\times d}, b\in\R^m\},\\
                 \Loss(f) &= -\sum_{n = 1}^{N}\sum_{k = 1}^{m}y_{nk}\log f(x_n)_{k},
             \end{align*}
+            \normalsize
             ここで$\psi:\R^m\to\R^m$はソフトマックス関数であり, $y_{n}$はone-hotベクトルである. このML空間$\MLsp$上で
             \begin{align*}
                 \argmin_{f\in\Hil}\Loss(f)
@@ -409,6 +412,18 @@
         \end{equation*}
         となる. 
     \end{frame}
+    \begin{frame}
+        \frametitle{クラスラベルの予測方法}
+        ロジスティック回帰の最適仮説$f^{*}$が得られた時, $x\in\X$に対してのクラスラベル
+        $c\in\{1, 2, \cdots, m\}$を,
+        \begin{equation*}
+            c = \argmax_{i\in\{1, 2, \cdots, m\}}f(x)_{i}
+        \end{equation*}
+        として求める. これは, シグモイド関数の出力$\psi(x)$の$i$番目の成分$\psi(x)_i$が
+        $x$がクラス$i$に所属する確率であるとみなせることから, 所属する確率が一番高いもの
+        を予測値とするのが自然だからである. 
+        % https://gensasaki.hatenablog.com/entry/2018/08/30/042807
+    \end{frame}
     \subsection{MNISTでの学習結果}
     \begin{frame}
         \frametitle{MNISTでの学習}
@@ -432,7 +447,7 @@
         \end{figure}
     \end{frame}
     \begin{frame}
-        \frametitle{多項式回帰の過学習}
+        \frametitle{学習結果}
         \begin{columns}[t]
             \begin{column}{0.65\textwidth} 
                 \begin{figure}
@@ -451,11 +466,102 @@
     \end{frame}
     \section{ニューラルネットワークと深層学習}
     \subsection{ニューラルネットワークと活性化関数}
+    \begin{frame}
+        \frametitle{活性化関数}
+        深層学習について紹介する前に活性化関数について紹介する. 
+        \begin{defi}[活性化関数]
+            $\sigma:\R^{d}\to\R^{d}$を非線形かつ, Lipschitz連続な関数とする. 
+            この時, $\sigma$を活性化関数(activation function)という.
+        \end{defi}  
+        \begin{exam}[活性化関数]
+            \begin{align*}
+                \sigma(x)_{i} &= \frac{1}{1 + \exp(-x_{i})},\\
+                \text{ReLU}(x)_{i} &= \max(x_{i}, 0).
+            \end{align*}
+            $\sigma$をシグモイド関数(sigmoid function), $\text{ReLU}$を正規化線形関数(Rectified Linear Unit)
+            という.
+        \end{exam}
+    \end{frame}
+    \begin{frame}
+        \frametitle{回帰型ニューラルネットワーク}
+        \begin{defi}[回帰型ニューラルネットワーク]
+            ML空間$\MLsp$を以下のように定義する. $L = \{L_{1}, L_{2}, \cdots, L_{K}\}$を自然数列とする.
+            $\X = \R^d$, $\Y = \R$, 
+            \footnotesize
+            \begin{align*}
+                \Hil &= \left\{f:\X\to\Y~\middle|
+                \begin{array}{l}
+                    f(x) = W^{\top}g_{K}\circ\cdots\circ g_{1}(x) + b, g_{i} = \eta(W_{i}x + b_{i})\\
+                    W_{i}\in\R^{L_{i}\times L_{i - 1}}, b_{i}\in\R^{L_{i}}, W\in\R^{L_{K}}, b\in\R
+                \end{array}
+                \right\},\\
+                \Loss(f) &= \frac{1}{N}\sum_{i = 1}^{N}(f(x_i) - y_i)^2,
+            \end{align*}
+            \normalsize
+            ここで$\eta$は活性化関数である. $f\in\Hil$を回帰型(全結合)ニューラルネットワーク(Full-connected Neural Network for Regression)
+            と呼び, 各$g_{i}$を$f$の第$i$層(layer)と呼ぶ.
+        \end{defi}
+    \end{frame}
+    \begin{frame}
+        \frametitle{分類型ニューラルネットワーク}
+        \begin{defi}[分類型ニューラルネットワーク]
+            ML空間$\MLsp$を以下のように定義する. $L = \{L_{1}, L_{2}, \cdots, L_{K}\}$を自然数列とする.
+            $\X = \R^d$, $\Y = \R^{m}$, 
+            \footnotesize
+            \begin{align*}
+                \Hil &= \left\{f:\X\to\Y~\middle|
+                \begin{array}{l}
+                    f(x) = \psi(W g_{K}\circ\cdots\circ g_{1}(x) + b), g_{i} = \eta(W_{i}x + b_{i})\\
+                        W_{i}\in\R^{L_{i}\times L_{i - 1}}, b_{i}\in\R^{L_{i}}, W\in\R^{m\times L_{K}}, b\in\R^{m}
+                \end{array}
+                \right\},\\
+                \Loss(f) &= -\sum_{n = 1}^{N}\sum_{k = 1}^{m}y_{nk}\log f(x_n)_{k},
+            \end{align*}
+            \normalsize
+            ここで$\eta$は活性化関数, $y_{i}$はone-hotベクトル, $\psi$はソフトマックス関数である. $f\in\Hil$を分類型(全結合)ニューラルネットワーク(Full-connected Neural Network for Classification)
+            と呼び, 回帰型の時と同様に各$g_{i}$を$f$の第$i$層と呼ぶ.
+        \end{defi}
+    \end{frame}
+    \begin{frame}
+        \frametitle{深層学習}
+        以下, ニューラルネットと書けば, 分類, 回帰ニューラルネットワークのいずれかを表すものとする. 
+        \begin{defi}[Deep Learning]
+            ニューラルネットワークが$K \geq 3$の時に
+            \begin{align*}
+                \argmin_{f\in\Hil}\Loss(f)
+            \end{align*}
+            を求める問題を深層学習(Deep Learning)と呼ぶ.
+        \end{defi}
+    \end{frame}
     \subsection{ニューラルネットワークと普遍性定理}
+    \begin{frame}
+        \frametitle{Universal Approximation Theorem}
+        ニューラルネットの近似能力に関する定理としては, 以下のような定理が知られている. 
+        \begin{thm}[普遍性定理\cite{UAT}]
+            $\X=I_{n}$, $\Hil$を$K = 1$の時の回帰型ニューラルネットの仮説空間とする. 
+            この時, 活性化関数$\eta$がシグモイド的関数ならば, 
+            \begin{align*}
+                \forall f\in C(\X), \forall\varepsilon> 0, \exists G\in\Hil\text{ s.t. } \sup_{x\in\X}|f(x) - G(x)| < \varepsilon
+            \end{align*}
+            が成立する. 
+        \end{thm}
+        証明にはHahn・Banachの定理とLieszの表現定理を用いる. 
+    \end{frame}
+    \begin{frame}
+        \frametitle{理論 vs. 実験}
+        ニューラルネットワークについてはまだまだわかっていないことが多く, 理論と実験結果が合わないような
+        こともしばしばある. 具体的には, 以下のようなものがある.
+            \begin{enumerate}
+                \item 学習がうまくいく(深層学習の目的関数は非凸関数(局所最適解やプラトーが多く存在する))
+                \item 層を増やしたほうが精度が向上する(一般に, モデルを複雑にしすぎると過学習を引き起こす)
+            \end{enumerate}
+    \end{frame}
     \section*{References}
     \begin{frame}\frametitle{References}
         \begin{thebibliography}{9}
             \beamertemplatetextbibitems
+            \bibitem{UAT} G. Cybenko, Approximation by Superpositions of a Sigmoidal Function, 
+                            Mathmatics of control, signal and systems, vol. 2, no. 4, 1989
 		    \bibitem{PFN} Preferred Networks, ディープラーニング入門 Chainer チュートリアル,
             https://tutorials.chainer.org/ja/index.html, 2019
 	    \end{thebibliography}
