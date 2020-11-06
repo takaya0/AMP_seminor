@@ -213,7 +213,7 @@
         この節では, はじめに多項式回帰を紹介する. 
         その前に基底関数というものを導入する. 
         \begin{defi}[基底関数]
-            $\X$を$\R$の部分集合とする. $\X$から$\X$への$C^1$級関数列$\{\phi_{n}\}_{n = 1}^{d}$が
+            $\X$を$\R$の部分集合とする. $\X$から$\R$への$C^1$級関数列$\{\phi_{n}\}_{n = 1}^{d}$が
             $\R$上1次独立である時, $\Phi(x) = (\phi_{0}(x), \phi_{1}(x), \ldots, \phi_{d}(x))$で定義される$\Phi:\X\to\R^{d + 1}$
             を基底関数と呼ぶ. 
         \end{defi}
@@ -538,7 +538,7 @@
         \frametitle{Universal Approximation Theorem}
         ニューラルネットの近似能力に関する定理としては, 以下のような定理が知られている. 
         \begin{thm}[普遍性定理\cite{UAT}]
-            $\X=I_{n}$, $\Hil$を$K = 1$の時の回帰型ニューラルネットの仮説空間とする. 
+            $\X=[0, 1]^{n}$, $\Hil$を$K = 1$の時の回帰型ニューラルネットの仮説空間とする. 
             この時, 活性化関数$\eta$がシグモイド的関数ならば, 
             \begin{align*}
                 \forall f\in C(\X), \forall\varepsilon> 0, \exists G\in\Hil\text{ s.t. } \sup_{x\in\X}|f(x) - G(x)| < \varepsilon
