@@ -108,7 +108,7 @@
             $\Hil$を仮説空間, $(\Omega, \mathcal{F}, \mathbb{P})$を確率空間, $\rho$をデータの確率分布とする.
             この時, 汎化誤差$\ell:\Hil\to\R$を, 
             \begin{equation*}
-                \ell(f_{\theta}) = \mathbb{E}_{(X, Y)\sim\rho}[l(f_{w}(X), Y)]
+                \ell(f_{w}) = \mathbb{E}_{(X, Y)\sim\rho}[l(f_{w}(X), Y)]
             \end{equation*}
             と定義する. ここで, $l:\Y\times\Y\to\R$は損失関数と呼ばれる凸関数である. 
         \end{defi}
@@ -419,7 +419,7 @@
         \begin{equation*}
             c = \argmax_{i\in\{1, 2, \cdots, m\}}f(x)_{i}
         \end{equation*}
-        として求める. これは, シグモイド関数の出力$\psi(x)$の$i$番目の成分$\psi(x)_i$が
+        として求める. これは, ソフトマックス関数の出力$\psi(x)$の$i$番目の成分$\psi(x)_i$が
         $x$がクラス$i$に所属する確率であるとみなせることから, 所属する確率が一番高いもの
         を予測値とするのが自然だからである. 
         % https://gensasaki.hatenablog.com/entry/2018/08/30/042807

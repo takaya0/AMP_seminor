@@ -1,0 +1,74 @@
+\documentclass[dvipdfmx,11pt]{beamer}		% for my notebook computer and my Mac computer
+%\documentclass[11pt]{beamer}			% for overleaf
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+%\usepackage{amsthm}
+\usepackage{multicol}
+\usepackage{listings}
+\usepackage{otf}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{tikz}
+\usepackage{mathtools}
+\usepackage{comment}
+\usetheme{Berlin}	%全体のデザイン
+
+\useoutertheme[subsection=false]{smoothbars}	%デザインのカスタマイズ
+
+\setbeamertemplate{navigation symbols}{}	%右下のちっちゃいナビゲーション記号を非表示
+
+\AtBeginSubsection[]	%サブセクションごとに目次を表示
+{\begin{frame}{Contents}
+    \begin{multicols}{2}
+        \tableofcontents[currentsubsection]
+    \end{multicols}
+\end{frame}}
+\newtheorem{defi}{Definition}
+\newtheorem{thm}[defi]{Theorem}
+\newtheorem{prop}[defi]{Proposition}
+\newtheorem{conj}[defi]{Conjecture}
+\newtheorem{exam}[defi]{Example}
+\newtheorem{prob}[defi]{Problem}
+\newtheorem{set}[defi]{Setting}
+\newtheorem{claim}[defi]{Claim}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\X}{\mathcal{X}}
+\newcommand{\Y}{\mathcal{Y}}
+\newcommand{\Hil}{\mathcal{H}}
+\newcommand{\Loss}{\mathcal{L}_{D}}
+\newcommand{\MLsp}{(\X, \Y, D, \Hil, \Loss)}
+
+\newcommand{\argmax}{\mathop{\rm arg~max}\limits}
+\newcommand{\argmin}{\mathop{\rm arg~min}\limits}
+
+
+\title{Generative Adversarial Networks}
+\author{Takaya KOIZUMI}
+\institute{Mathematical Science, B4}
+\date{Applied Mathematics and Physics informal seminor}
+\begin{document}
+    \begin{frame}\frametitle{}
+        \titlepage
+    \end{frame}
+    \section*{Contents}
+    \begin{frame}\frametitle{Contents}
+        \begin{multicols}{2}
+            \tableofcontents
+        \end{multicols}
+    \end{frame}
+    \section*{References}
+    \begin{frame}\frametitle{References}
+        \begin{thebibliography}{9}
+            \beamertemplatetextbibitems
+            \bibitem{UAT} G. Cybenko, Approximation by Superpositions of a Sigmoidal Function, 
+                            Mathmatics of control, signal and systems, vol. 2, no. 4, 1989
+		    \bibitem{PFN} Preferred Networks, ディープラーニング入門 Chainer チュートリアル,
+            https://tutorials.chainer.org/ja/index.html, 2019
+	    \end{thebibliography}
+    \end{frame}
+\end{document}
+
+
